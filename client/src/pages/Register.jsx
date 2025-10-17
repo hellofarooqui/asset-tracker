@@ -2,16 +2,23 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
-export default function LoginPage() {
+
+// name;
+// email;
+// username;
+// password;
+
+const Register = () => {
   const [formData, setFormData] = useState({
+    name:"",
+    email:"",
     username: "",
     password: "",
-    rememberMe: false,
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAppContext();
+  const { register } = useAppContext();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -26,7 +33,7 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    const result = await login(formData.username, formData.password);
+    const result = await register(formData.name, formData.email, formData.username, formData.password);
 
     setIsLoading(false);
 
@@ -35,10 +42,6 @@ export default function LoginPage() {
     } else {
       setError(result.error || "Invalid credentials");
     }
-  };
-
-  const handleForgotPassword = () => {
-    navigate("/forgot-password");
   };
 
   return (
@@ -57,7 +60,9 @@ export default function LoginPage() {
               </svg>
               <h1 className="text-3xl font-bold text-white">AssetTrack</h1>
             </div>
-            <p className="text-slate-400 text-sm">Secure Login</p>
+            <p className="text-slate-200 text-2xl font-semibold block text-start mt-6">
+              Registration
+            </p>
           </div>
 
           {/* Error Message */}
@@ -69,6 +74,34 @@ export default function LoginPage() {
 
           {/* Login Form */}
           <div className="space-y-5">
+            {/* name Input */}
+            <div>
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                disabled={isLoading}
+                required
+              />
+            </div>
+
+            {/* email Input */}
+            <div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                disabled={isLoading}
+                required
+              />
+            </div>
+
             {/* Username Input */}
             <div>
               <input
@@ -97,46 +130,25 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Remember Me and Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-900/50 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                  disabled={isLoading}
-                />
-                <span className="ml-2 text-sm text-slate-300">Remember me</span>
-              </label>
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                className="text-sm text-blue-500 hover:text-blue-400 transition-colors"
-                disabled={isLoading}
-              >
-                Forgot your password?
-              </button>
-            </div>
-
             {/* Login Button */}
             <button
               onClick={handleSubmit}
               disabled={isLoading}
               className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Logging in..." : "Log In"}
+              {isLoading ? "Registering..." : "Register"}
             </button>
             <p
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/login")}
               className="block text-center text-slate-400 hover:text-slate-200 cursor-pointer"
             >
-              New User? <span className="underline">Register</span> here
+              Already registered? <span className="underline">Login</span> here
             </p>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Register;

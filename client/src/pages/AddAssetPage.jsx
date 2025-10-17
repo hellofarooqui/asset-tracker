@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../context/AppContext";
 
-export default function AddNewAsset() {
+export default function AddAssetPage() {
+  const navigate = useNavigate();
+  const { addAsset, getAssetTypes } = useAppContext();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     assetType: "",
     manufacturer: "",
@@ -12,18 +18,9 @@ export default function AddNewAsset() {
     warrantyExpiryDate: "",
     initialStatus: "",
   });
+  const [assetTypes,setAssetTypes] = useState([]);
+  const statusOptions = ["In Use", "In Stock", "Under Maintenance", "Retired"];
 
-  const assetTypes = [
-    "Laptop",
-    "Desktop",
-    "Monitor",
-    "Printer",
-    "Server",
-    "Network Switch",
-    "Wireless AP",
-    "Router",
-  ];
-  const statusOptions = ["Active", "In Stock", "Under Maintenance", "Inactive"];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,15 +30,65 @@ export default function AddNewAsset() {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    // Add your submit logic here
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setError("");
+
+    const result = await addAsset({
+      type: formData.assetType,
+      manufacturer: formData.manufacturer,
+      model: formData.model,
+      serialNumber: formData.serialNumber,
+      purchaseDate: formData.purchaseDate,
+      cost: parseFloat(formData.cost),
+      warrantyExpiry: formData.warrantyExpiryDate,
+      status: formData.initialStatus,
+    });
+
+    setIsLoading(false);
+
+    if (result.success) {
+      navigate("/assets");
+    } else {
+      setError(result.error || "Failed to add asset");
+    }
   };
 
   const handleCancel = () => {
-    console.log("Form cancelled");
-    // Add your cancel logic here
+    navigate("/assets");
   };
+
+  useEffect(() => {
+    const fetchAssetTypes = async () => {
+      setIsLoading(true);
+      const result = await getAssetTypes();
+      if (result.success) {
+        console.log("Fetched asset types:", result);
+        setAssetTypes(result.data);
+        setIsLoading(false);
+      } else {
+        setError(result.error || "Failed to fetch asset types");
+        setIsLoading(false);
+      }
+    };
+    fetchAssetTypes();
+  }, []);
+
+  if(isLoading){
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if(error){
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <div className="text-red-500 text-lg">Error: {error}</div>
+      </div>
+    );
+  } 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -103,8 +150,8 @@ export default function AddNewAsset() {
                   Select Asset Type
                 </option>
                 {assetTypes.map((type) => (
-                  <option key={type} value={type} className="bg-slate-900">
-                    {type}
+                  <option key={type._id} value={type} className="bg-slate-900">
+                    {type.name}
                   </option>
                 ))}
               </select>

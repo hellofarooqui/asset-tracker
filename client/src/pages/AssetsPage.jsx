@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search, Filter, X, BarChart3, Users, Package } from "lucide-react";
 
-export default function AssetListAndDetails() {
+export default function AssetsPage() {
   const [activeMenu, setActiveMenu] = useState("Assets");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,55 +118,7 @@ export default function AssetListAndDetails() {
 
   return (
     <div className="flex h-screen bg-slate-900">
-      {/* Sidebar */}
-      <div className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded"></div>
-            <span className="text-white font-bold text-lg">AssetTrack</span>
-          </div>
-        </div>
-
-        {/* Menu Items */}
-        <nav className="flex-1 p-4">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.name}
-                onClick={() => setActiveMenu(item.name)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
-                  activeMenu === item.name
-                    ? "bg-blue-600/20 text-blue-400"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                <Icon size={20} />
-                <span>{item.name}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-medium">
-              EC
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-white text-sm font-medium truncate">
-                Ethan Carter
-              </div>
-              <div className="text-slate-400 text-xs truncate">
-                ethan.carter@example.com
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Asset List */}

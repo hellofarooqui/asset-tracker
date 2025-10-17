@@ -1,0 +1,1 @@
+export const AssetStatuses = ["Active", "Inactive", "In Stock", "Maintenance"];
