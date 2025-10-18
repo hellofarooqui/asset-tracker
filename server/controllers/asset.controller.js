@@ -1,9 +1,11 @@
 const Asset = require("../models/Asset");
-const AssetType = require("../models/AssetType");
+const AssetCategory = require("../models/AssetCategory");
+const Manufacturer = require("../models/Manufacturer");
+const AssetModel = require("../models/AssetModel");
 
 exports.getAllAssets = async (req, res) => {
-   
   try {
+    console.log("Fetching all assets with query:", req.query);
     const { search, type, status, page = 1, limit = 50 } = req.query;
 
     const query = {};
@@ -20,12 +22,21 @@ exports.getAllAssets = async (req, res) => {
     if (status) query.status = status;
 
     const assets = await Asset.find(query)
-      .populate("assignedUser", "name email")
+      .populate({
+        path:'model',
+        populate: {
+          path: 'name manufacturer assetCategory modelnumber',
+          select: 'name'
+        } 
+        
+      })
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
 
     const count = await Asset.countDocuments(query);
+
+
 
     res.status(200).json({
       success: true,
@@ -60,7 +71,12 @@ exports.getAssetById = async (req, res) => {
 
 exports.createAsset = async (req, res) => {
   try {
+    console.log("Creating asset with data:", req.body);
     const asset = await Asset.create(req.body);
+
+    if(!asset){
+      return res.status(400).json({ message: "Asset creation failed" });
+    }
 
     res.status(201).json({
       success: true,
@@ -160,30 +176,16 @@ exports.getAssetStats = async (req, res) => {
     const stats = await Asset.aggregate([
       {
         $facet: {
-          byType: [{ $group: { _id: "$type", count: { $sum: 1 } } }],
+          byModel: [{ $group: { _id: "$model", count: { $sum: 1 } } }],
           byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
           total: [{ $count: "count" }],
         },
       },
     ]);
 
-    const formatStats = {
-      networkSwitches:
-        stats[0].byType.find((t) => t._id === "Network Switch")?.count || 0,
-      wirelessAPs:
-        stats[0].byType.find((t) => t._id === "Wireless AP")?.count || 0,
-      desktops: stats[0].byType.find((t) => t._id === "Desktop")?.count || 0,
-      laptops: stats[0].byType.find((t) => t._id === "Laptop")?.count || 0,
-      inUse: stats[0].byStatus.find((s) => s._id === "Active")?.count || 0,
-      inStock: stats[0].byStatus.find((s) => s._id === "In Stock")?.count || 0,
-      underMaintenance:
-        stats[0].byStatus.find((s) => s._id === "Maintenance")?.count || 0,
-      total: stats[0].total[0]?.count || 0,
-    };
-
     res.status(200).json({
       success: true,
-      stats: formatStats,
+      stats: stats,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -215,39 +217,37 @@ exports.getRecentActivity = async (req, res) => {
   }
 };
 
-exports.getAssetTypes = async (req, res) => {
-    console.log("Fetching asset types");
+exports.getAssetCategories = async (req, res) => {
+  console.log("Fetching asset types");
   try {
-    const types = await AssetType.find().select("name description");
+    const types = await AssetCategory.find().select("name description");
 
-    if(types){
-    res.status(200).json({
-      success: true,
-      types,
-    });
+    if (types) {
+      res.status(200).json({
+        success: true,
+        types,
+      });
     }
-
   } catch (error) {
     console.log("Error fetching asset types:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-exports.addAssetType = async (req, res) => {
+exports.addAssetCategory = async (req, res) => {
   try {
-    const { name,description } = req.body;
+    const { name, description } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
 
     // Check if type already exists
-    const existingType = await AssetType.findOne({ name });
+    const existingType = await AssetCategory.findOne({ name });
     if (existingType) {
       return res.status(400).json({ message: "Type already exists" });
     }
 
-    
-    const newType = await AssetType.create({ name, description });
+    const newType = await AssetCategory.create({ name, description });
 
     res.status(201).json({
       success: true,
@@ -259,11 +259,13 @@ exports.addAssetType = async (req, res) => {
   }
 };
 
-exports.updateAssetType = async (req, res) => {
+exports.updateAssetCategory = async (req, res) => {
   try {
     const { oldType, newType } = req.body;
     if (!oldType || !newType) {
-      return res.status(400).json({ message: "Both old and new types are required" });
+      return res
+        .status(400)
+        .json({ message: "Both old and new types are required" });
     }
 
     // Check if old type exists
@@ -284,7 +286,7 @@ exports.updateAssetType = async (req, res) => {
   }
 };
 
-exports.deleteAssetType = async (req, res) => {
+exports.deleteAssetCatgory = async (req, res) => {
   try {
     const { type } = req.body;
     if (!type) {
@@ -300,7 +302,9 @@ exports.deleteAssetType = async (req, res) => {
     // Check if any assets are using this type
     const assetsUsingType = await Asset.findOne({ type });
     if (assetsUsingType) {
-      return res.status(400).json({ message: "Cannot delete type in use by assets" });
+      return res
+        .status(400)
+        .json({ message: "Cannot delete type in use by assets" });
     }
 
     // Create a dummy asset to remove the type
@@ -309,11 +313,11 @@ exports.deleteAssetType = async (req, res) => {
       type,
       manufacturer: "Dummy",
       model: "Dummy",
-        serialNumber: `DUMMY-${Date.now()}`,
-        purchaseDate: new Date(),
-        warrantyExpiry: new Date(),
-        cost: 0,
-        status: "In Stock",
+      serialNumber: `DUMMY-${Date.now()}`,
+      purchaseDate: new Date(),
+      warrantyExpiry: new Date(),
+      cost: 0,
+      status: "In Stock",
     });
     await dummyAsset.save();
     await Asset.findByIdAndDelete(dummyAsset._id);
@@ -361,3 +365,158 @@ exports.deleteAssetType = async (req, res) => {
 //       .json({ message: "Not authorized to access this route" });
 //   }
 // }
+
+exports.addNewManufacturer = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Manufacturer name is required" });
+    }
+
+    // Check if manufacturer already exists
+    const existingManufacturer = await Manufacturer.findOne({ name });
+    if (existingManufacturer) {
+      return res.status(400).json({ message: "Manufacturer already exists" });
+    }
+
+    // Since manufacturer is just a string field in Asset, no separate model is created.
+    // We can just acknowledge the addition.
+
+    const addedManufacturer = await Manufacturer.create(req.body);
+
+    if (addedManufacturer) {
+      res.status(201).json({
+        success: true,
+        message: "Manufacturer added successfully",
+        manufacturer: addedManufacturer,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getAllManufacturers = async (req, res) => {
+  try {
+    const manufacturers = await Manufacturer.find();
+    if (manufacturers) {
+      res.status(200).json({
+        success: true,
+        manufacturers,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateManufacturer = async (req, res) => {
+  try {
+    const { oldName, newName } = req.body;
+    if (!oldName || !newName) {
+      return res
+        .status(400)
+        .json({ message: "Both old and new manufacturer names are required" });
+    }
+
+    // Check if old manufacturer exists
+    const existingManufacturers = await Asset.distinct("manufacturer");
+    if (!existingManufacturers.includes(oldName)) {
+      return res.status(404).json({ message: "Old manufacturer not found" });
+    }
+
+    // Update all assets with the old manufacturer to the new manufacturer
+    await Asset.updateMany(
+      { manufacturer: oldName },
+      { manufacturer: newName }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Manufacturer updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteManufacturer = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Manufacturer name is required" });
+    }
+
+    // Check if manufacturer exists
+    const existingManufacturers = await Asset.distinct("manufacturer");
+    if (!existingManufacturers.includes(name)) {
+      return res.status(404).json({ message: "Manufacturer not found" });
+    }
+
+    // Check if any assets are using this manufacturer
+    const assetsUsingManufacturer = await Asset.findOne({ manufacturer: name });
+    if (assetsUsingManufacturer) {
+      return res
+        .status(400)
+        .json({ message: "Cannot delete manufacturer in use by assets" });
+    }
+
+    // Since manufacturer is just a string field in Asset, we can't delete it from a separate collection.
+    // Instead, we can just acknowledge the deletion.
+
+    res.status(200).json({
+      success: true,
+      message: "Manufacturer deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.getAllAssetModels = async (req, res) => {
+  try {
+    const models = await AssetModel.find();
+    res.status(200).json({
+      success: true,
+      models,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.addAssetModel = async (req, res) => {
+  try{
+    const added = await AssetModel.create(req.body);
+
+    if(added){
+      res.status(201).json({
+        success: true,
+        message: "Asset model added successfully",
+        model: added,
+      });
+    }
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+exports.updateAssetModel = async (req, res) => {
+  try{
+
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+exports.deleteAssetModel = async (req, res) => {
+  try{
+
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}

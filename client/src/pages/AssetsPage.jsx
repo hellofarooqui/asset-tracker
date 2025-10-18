@@ -1,79 +1,106 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Filter, X, BarChart3, Users, Package } from "lucide-react";
+import { useAppContext } from "../context/AppContext";
 
 export default function AssetsPage() {
   const [activeMenu, setActiveMenu] = useState("Assets");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [assets, setAssets] = useState([]);
+  const { fetchAssets } = useAppContext();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const assets = [
-    {
-      id: "A1234",
-      type: "Laptop",
-      model: "Model X",
-      status: "Active",
-      statusColor: "green",
-      assignedTo: "Ethan Carter",
-      serialNumber: "SN123456789",
-      purchaseDate: "2022-01-15",
-      warrantyExpiry: "2024-01-15",
-    },
-    {
-      id: "B5678",
-      type: "Desktop",
-      model: "Model Y",
-      status: "Inactive",
-      statusColor: "red",
-      assignedTo: "Office A",
-      serialNumber: "SN987654321",
-      purchaseDate: "2021-03-20",
-      warrantyExpiry: "2023-03-20",
-    },
-    {
-      id: "C9012",
-      type: "Monitor",
-      model: "Model Z",
-      status: "Active",
-      statusColor: "green",
-      assignedTo: "Sophia Clark",
-      serialNumber: "SN456789123",
-      purchaseDate: "2022-06-10",
-      warrantyExpiry: "2024-06-10",
-    },
-    {
-      id: "D3456",
-      type: "Printer",
-      model: "Model P",
-      status: "Maintenance",
-      statusColor: "yellow",
-      assignedTo: "Office B",
-      serialNumber: "SN789123456",
-      purchaseDate: "2020-11-05",
-      warrantyExpiry: "2022-11-05",
-    },
-    {
-      id: "E7890",
-      type: "Server",
-      model: "Model S",
-      status: "Active",
-      statusColor: "green",
-      assignedTo: "Data Center",
-      serialNumber: "SN321654987",
-      purchaseDate: "2021-08-15",
-      warrantyExpiry: "2024-08-15",
-    },
-    {
-      id: "F1234",
-      type: "Laptop",
-      model: "Model X",
-      status: "Active",
-      statusColor: "green",
-      assignedTo: "Liam Walker",
-      serialNumber: "SN654987321",
-      purchaseDate: "2022-09-20",
-      warrantyExpiry: "2024-09-20",
-    },
-  ];
+  useEffect(() => {
+    // Fetch assets from API or context here
+    // For now, using static data
+    const fetchAllAssets = async () => {
+      try {
+        const result = await fetchAssets();
+        if(result.success){
+          console.log(result.data)
+          setAssets(result.data);
+          setError(null);
+        } else {
+          console.log("Failed to fetch assets:", result);
+          setError("Failed to load assets");
+        }
+      } catch (error) {
+        console.log("Error fetching assets:", error);
+        setError("Failed to load assets");
+      }
+    };
+    fetchAllAssets();
+  }, []);
+
+  // const assets = [
+  //   {
+  //     id: "A1234",
+  //     type: "Laptop",
+  //     model: "Model X",
+  //     status: "Active",
+  //     statusColor: "green",
+  //     assignedTo: "Ethan Carter",
+  //     serialNumber: "SN123456789",
+  //     purchaseDate: "2022-01-15",
+  //     warrantyExpiry: "2024-01-15",
+  //   },
+  //   {
+  //     id: "B5678",
+  //     type: "Desktop",
+  //     model: "Model Y",
+  //     status: "Inactive",
+  //     statusColor: "red",
+  //     assignedTo: "Office A",
+  //     serialNumber: "SN987654321",
+  //     purchaseDate: "2021-03-20",
+  //     warrantyExpiry: "2023-03-20",
+  //   },
+  //   {
+  //     id: "C9012",
+  //     type: "Monitor",
+  //     model: "Model Z",
+  //     status: "Active",
+  //     statusColor: "green",
+  //     assignedTo: "Sophia Clark",
+  //     serialNumber: "SN456789123",
+  //     purchaseDate: "2022-06-10",
+  //     warrantyExpiry: "2024-06-10",
+  //   },
+  //   {
+  //     id: "D3456",
+  //     type: "Printer",
+  //     model: "Model P",
+  //     status: "Maintenance",
+  //     statusColor: "yellow",
+  //     assignedTo: "Office B",
+  //     serialNumber: "SN789123456",
+  //     purchaseDate: "2020-11-05",
+  //     warrantyExpiry: "2022-11-05",
+  //   },
+  //   {
+  //     id: "E7890",
+  //     type: "Server",
+  //     model: "Model S",
+  //     status: "Active",
+  //     statusColor: "green",
+  //     assignedTo: "Data Center",
+  //     serialNumber: "SN321654987",
+  //     purchaseDate: "2021-08-15",
+  //     warrantyExpiry: "2024-08-15",
+  //   },
+  //   {
+  //     id: "F1234",
+  //     type: "Laptop",
+  //     model: "Model X",
+  //     status: "Active",
+  //     statusColor: "green",
+  //     assignedTo: "Liam Walker",
+  //     serialNumber: "SN654987321",
+  //     purchaseDate: "2022-09-20",
+  //     warrantyExpiry: "2024-09-20",
+  //   },
+  // ];
 
   const maintenanceHistory = [
     {
@@ -116,9 +143,16 @@ export default function AssetsPage() {
     console.log("Change status clicked");
   };
 
+  if(loading){
+    return <div className="flex items-center justify-center h-screen bg-slate-900 text-white">Loading assets...</div>;
+  }
+  
+  if(error){
+    return <div className="flex items-center justify-center h-screen bg-slate-900 text-red-500">{error}</div>;
+  }
+
   return (
     <div className="flex h-screen bg-slate-900">
-      
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Asset List */}
@@ -157,7 +191,7 @@ export default function AssetsPage() {
               <thead className="sticky top-0 bg-slate-900 border-b border-slate-800">
                 <tr>
                   <th className="text-left px-6 py-4 text-slate-400 font-medium text-sm">
-                    Asset ID
+                    Manufacturer
                   </th>
                   <th className="text-left px-6 py-4 text-slate-400 font-medium text-sm">
                     Type
@@ -168,25 +202,23 @@ export default function AssetsPage() {
                   <th className="text-left px-6 py-4 text-slate-400 font-medium text-sm">
                     Status
                   </th>
-                  <th className="text-left px-6 py-4 text-slate-400 font-medium text-sm">
-                    Assigned To
-                  </th>
+                
                 </tr>
               </thead>
               <tbody>
                 {assets.map((asset) => (
                   <tr
-                    key={asset.id}
+                    key={asset._id}
                     onClick={() => handleAssetClick(asset)}
                     className={`border-b border-slate-800 hover:bg-slate-800/50 cursor-pointer transition-colors ${
                       selectedAsset?.id === asset.id ? "bg-slate-800/50" : ""
                     }`}
                   >
                     <td className="px-6 py-4 text-white font-medium">
-                      {asset.id}
+                      {asset.model?.manufacturer.name}
                     </td>
-                    <td className="px-6 py-4 text-slate-300">{asset.type}</td>
-                    <td className="px-6 py-4 text-slate-300">{asset.model}</td>
+                    <td className="px-6 py-4 text-slate-300">{asset.model.assetCategory.name}</td>
+                    <td className="px-6 py-4 text-slate-300">{asset.model.name}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
@@ -209,9 +241,7 @@ export default function AssetsPage() {
                         {asset.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-300">
-                      {asset.assignedTo}
-                    </td>
+                  
                   </tr>
                 ))}
               </tbody>

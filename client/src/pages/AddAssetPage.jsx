@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
 export default function AddAssetPage() {
   const navigate = useNavigate();
-  const { addAsset, getAssetTypes } = useAppContext();
+  const { addAsset, getAssetTypes, getAllManufacturers, getAssetModels } =
+    useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -18,12 +19,56 @@ export default function AddAssetPage() {
     warrantyExpiryDate: "",
     initialStatus: "",
   });
-  const [assetTypes,setAssetTypes] = useState([]);
+  const [assetTypes, setAssetTypes] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [assetModels, setAssetModels] = useState([]);
+  const [filteredAssetModels, setFilteredAssetModels] = useState([]);
+  const [modelFilterValue, setModelFilterValue] = useState("");
   const statusOptions = ["In Use", "In Stock", "Under Maintenance", "Retired"];
 
+  // refs for click-outside behavior
+  const modelInputRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // special handling for model input: keep a separate filter value
+    if (name === "model") {
+      if (!formData.manufacturer) {
+        const selectedModel = assetModels.find((m) => m.name === value);
+        setFormData((prev) => ({
+          ...prev,
+          manufacturer:
+            manufacturers.find(
+              (manu) => manu._id === selectedModel.manufacturer
+            )?._id || "",
+        }));
+        setModelFilterValue("");
+        return;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        model: value,
+      }));
+      return;
+    }
+
+    // when manufacturer changes, clear model-related fields
+    if (name === "manufacturer") {
+      setFormData((prev) => ({
+        ...prev,
+        manufacturer: value,
+        model: "",
+      }));
+      setModelFilterValue("");
+      setFilteredAssetModels(
+        assetModels.filter((m) => m.manufacturer === value)
+      );
+      // assetModels will be updated by useEffect watching manufacturers or formData.manufacturer
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -34,23 +79,29 @@ export default function AddAssetPage() {
     setIsLoading(true);
     setError("");
 
-    const result = await addAsset({
-      type: formData.assetType,
-      manufacturer: formData.manufacturer,
-      model: formData.model,
-      serialNumber: formData.serialNumber,
-      purchaseDate: formData.purchaseDate,
-      cost: parseFloat(formData.cost),
-      warrantyExpiry: formData.warrantyExpiryDate,
-      status: formData.initialStatus,
-    });
+    try {
+      const result = await addAsset({
+        type: formData.assetType,
+        manufacturer: formData.manufacturer,
+        model: formData.model,
+        serialNumber: formData.serialNumber,
+        purchaseDate: formData.purchaseDate,
+        cost: parseFloat(formData.cost),
+        warrantyExpiry: formData.warrantyExpiryDate,
+        status: formData.initialStatus,
+      });
 
-    setIsLoading(false);
-
-    if (result.success) {
-      navigate("/assets");
-    } else {
-      setError(result.error || "Failed to add asset");
+      if (result.success) {
+        console.log("Asset added successfully:", result);
+        navigate("/assets");
+      } else {
+        throw new Error(result.error || "Failed to add asset");
+      }
+    } catch (error) {
+      // setError(error || "Failed to add asset");
+      console.log("Error in adding asset",error)
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,10 +122,81 @@ export default function AddAssetPage() {
         setIsLoading(false);
       }
     };
+    const fetchManufacturers = async () => {
+      setIsLoading(true);
+      const result = await getAllManufacturers();
+      if (result.success) {
+        console.log("Fetched manufacturers:", result.data);
+        setManufacturers(result.data);
+        setIsLoading(false);
+      } else {
+        setError(result.error || "Failed to fetch manufacturers");
+        setIsLoading(false);
+      }
+    };
+    const fetchAssetModels = async () => {
+      setIsLoading(true);
+      const result = await getAssetModels();
+      if (result.success) {
+        console.log("Fetched asset models:", result.data);
+        setAssetModels(result.data);
+        setFilteredAssetModels(result.data);
+        setIsLoading(false);
+      } else {
+        setError(result.error || "Failed to fetch asset models");
+        setIsLoading(false);
+      }
+    };
+    fetchAssetModels();
+    fetchManufacturers();
     fetchAssetTypes();
   }, []);
 
-  if(isLoading){
+  // When manufacturer changes, populate assetModels from selected manufacturer
+  // useEffect(() => {
+  //   if (!formData.manufacturer) {
+  //     setAssetModels([]);
+  //     setFilteredAssetModels([]);
+  //     return;
+  //   }
+  //   const selectedManu = manufacturers.find(
+  //     (m) => m._id === formData.manufacturer
+  //   );
+  //   // adjust `models` if your manufacturer object uses a different key
+  //   const models =
+  //     selectedManu && Array.isArray(selectedManu.models)
+  //       ? selectedManu.models
+  //       : [];
+  //   setAssetModels(models);
+  //   // reset model/filter when manufacturer changes
+  //   setFormData((prev) => ({ ...prev, model: "" }));
+  //   setModelFilterValue("");
+  //   setFilteredAssetModels(models);
+  // }, [formData.manufacturer, manufacturers]);
+
+  // click outside dropdown to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        modelInputRef.current &&
+        !modelInputRef.current.contains(e.target)
+      ) {
+        setFilteredAssetModels([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const onSelectModel = (model) => {
+    setFormData((prev) => ({ ...prev, model }));
+    setModelFilterValue(model);
+    setFilteredAssetModels([]);
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
         <div className="text-white text-lg">Loading...</div>
@@ -82,13 +204,13 @@ export default function AddAssetPage() {
     );
   }
 
-  if(error){
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
         <div className="text-red-500 text-lg">Error: {error}</div>
       </div>
     );
-  } 
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -150,7 +272,11 @@ export default function AddAssetPage() {
                   Select Asset Type
                 </option>
                 {assetTypes.map((type) => (
-                  <option key={type._id} value={type} className="bg-slate-900">
+                  <option
+                    key={type._id}
+                    value={type._id}
+                    className="bg-slate-900"
+                  >
                     {type.name}
                   </option>
                 ))}
@@ -162,18 +288,29 @@ export default function AddAssetPage() {
               <label className="block text-slate-300 text-sm font-medium mb-2">
                 Manufacturer
               </label>
-              <input
-                type="text"
+              <select
                 name="manufacturer"
-                placeholder="e.g. Dell"
                 value={formData.manufacturer}
+                type="text"
+                placeholder="e.g. Dell"
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
+              >
+                <option>Select Manufacturer</option>
+                {manufacturers.map((manu) => (
+                  <option
+                    key={manu._id}
+                    value={manu._id}
+                    className="bg-slate-900"
+                  >
+                    {manu.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Model */}
-            <div>
+            {/* <div className="relative" ref={dropdownRef}>
               <label className="block text-slate-300 text-sm font-medium mb-2">
                 Model
               </label>
@@ -181,10 +318,60 @@ export default function AddAssetPage() {
                 type="text"
                 name="model"
                 placeholder="e.g. XPS 15"
-                value={formData.model}
+                value={modelFilterValue || formData.model}
+                onChange={handleChange}
+                ref={modelInputRef}
+                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                onFocus={() => {
+                  // show suggestions when focused and there's a filter or existing models
+                  if (modelFilterValue || assetModels.length) {
+                    const filtered = assetModels.filter((m) =>
+                      m
+                        .toLowerCase()
+                        .includes((modelFilterValue || "").toLowerCase())
+                    );
+                    setFilteredAssetModels(filtered);
+                  }
+                }}
+              />
+              {filteredAssetModels && filteredAssetModels.length > 0 && (
+                <ul className="absolute z-20 left-0 right-0 mt-2 max-h-48 overflow-auto bg-slate-900/90 border border-slate-700 rounded-lg shadow-lg">
+                  {filteredAssetModels.map((m) => (
+                    <li
+                      key={m._id}
+                      onClick={() => onSelectModel(m)}
+                      className="px-4 py-2 hover:bg-slate-800 cursor-pointer text-white"
+                    >
+                      {m.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div> */}
+
+            <div className="">
+              <label className="block text-slate-300 text-sm font-medium mb-2">
+                Model
+              </label>
+              <select
+                name="model"
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
+              >
+                <option value="" className="bg-slate-900">
+                  Select Model
+                </option>
+
+                {filteredAssetModels.length > 0 ? (
+                  filteredAssetModels.map((model) => (
+                    <option key={model._id} value={model._id}>
+                      {model.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No Model Found</option>
+                )}
+              </select>
             </div>
 
             {/* Serial Number */}

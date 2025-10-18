@@ -5,6 +5,7 @@ const { protect, authorize } = require("../middlewares/auth.middleware");
 
 router.use(protect); // All routes require authentication
 
+//routes for all assets
 router
   .route("/")
   .get(assetController.getAllAssets)
@@ -15,14 +16,25 @@ router.route("/stats").get(assetController.getAssetStats);
 router.route("/recent").get(assetController.getRecentActivity);
 
 
-  router
-    .route("/assetTypes")
-    .get(assetController.getAssetTypes)
-    .post(assetController.addAssetType)
-    .put(assetController.updateAssetType)
-    .delete(assetController.deleteAssetType);
+//asset category routes
+router
+  .route("/category")
+  .get(assetController.getAssetCategories)
+  .post(assetController.addAssetCategory)
+  .put(assetController.updateAssetCategory)
+  .delete(assetController.deleteAssetCatgory);
+
+  //asset model routes
+router
+  .route("/models")
+  .get(assetController.getAllAssetModels)
+  .post(assetController.addAssetModel)
+  .put(assetController.updateAssetModel)
+  .delete(assetController.deleteAssetModel);
 
 
+
+//routes for one specific asset
 router
   .route("/:id")
   .get(assetController.getAssetById)
@@ -36,12 +48,5 @@ router
 router
   .route("/:id/maintenance")
   .post(authorize("Admin", "Manager"), assetController.addMaintenanceRecord);
-
-  router
-  .route("/assetTypes")
-  .get(assetController.getAssetTypes)
-  .post(assetController.addAssetType)
-  .put(assetController.updateAssetType)
-  .delete(assetController.deleteAssetType);
 
 module.exports = router;

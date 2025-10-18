@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const assetTypeSchema = new mongoose.Schema(
+const assetCategorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -26,5 +26,5 @@ const assetTypeSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("AssetType", assetTypeSchema);
+module.exports = mongoose.model("AssetCategory", assetCategorySchema);
 

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const assetModelSchema = new mongoose.Schema(
   {
@@ -14,10 +14,11 @@ const assetModelSchema = new mongoose.Schema(
     },
     modelnumber:{
         type: String,
+        required: true,
     },
-    assetType: {
+    assetCategory: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "AssetType",
+      ref: "AssetCategory",
       required: true,
     },
     manufacturer: {

@@ -7,6 +7,7 @@ const AuthRouter = require("./routes/auth.routes");
 const AssetRouter = require("./routes/assets.routes");
 const UserRouter = require("./routes/users.routes");
 const ReportsRouter = require("./routes/reports.routes");
+const ManufacturerRouter = require("./routes/manufacturer.routes");
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use("/api/auth", AuthRouter);
 app.use("/api/assets", AssetRouter );
 app.use("/api/users", UserRouter);
 app.use("/api/reports", ReportsRouter);
+app.use('/api/manufacturers', ManufacturerRouter)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -57,17 +57,30 @@ export const assetsAPI = {
   create: (assetData) => api.post("/assets", assetData),
   update: (id, assetData) => api.put(`/assets/${id}`, assetData),
   delete: (id) => api.delete(`/assets/${id}`),
-  getAssetTypes: () => api.get("/assets/assetTypes"),
-  addAssetType: (typeData) => api.post("/assets/assetTypes", typeData),
-  updateAssetType: (typeData) => api.put("/assets/assetTypes", typeData),
+  getAssetTypes: () => api.get("/assets/category"),
+  addAssetType: (typeData) => api.post("/assets/category", typeData),
+  updateAssetType: (typeData) => api.put("/assets/category", typeData),
   deleteAssetType: (type) =>
     api.delete("/assets/assetTypes", { data: { type } }),
+  getAllAssetModels: () => api.get("/assets/models"),
+  addAssetModel: (modelData) => api.post("/assets/models", modelData),
+  updateAssetModel: (modelData) => api.put("/assets/models", modelData),
+  deleteAssetModel: (modelId) =>
+    api.delete("/assets/models", { data: { id: modelId } }),
   updateStatus: (id, status) => api.patch(`/assets/${id}/status`, { status }),
   getStats: () => api.get("/assets/stats"),
   getRecentActivity: (limit) =>
     api.get("/assets/recent", { params: { limit } }),
   addMaintenanceRecord: (id, record) =>
     api.post(`/assets/${id}/maintenance`, record),
+};
+
+export const manufacturersAPI = {
+  getAllManufacturers: () => api.get("/manufacturers"),
+  addNew: (manufacturerData) => api.post("/manufacturers", manufacturerData),
+  update: (manufacturerData) => api.put("/manufacturers", manufacturerData),
+  delete: (manufacturerId) =>
+    api.delete("/assets/manufacturers", { data: { id: manufacturerId } }),
 };
 
 // Users API calls

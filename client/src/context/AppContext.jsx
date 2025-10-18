@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI, assetsAPI, usersAPI } from "../services/api";
+import {
+  authAPI,
+  assetsAPI,
+  usersAPI,
+  manufacturersAPI,
+} from "../services/api";
 
 const AppContext = createContext();
 
@@ -13,7 +18,6 @@ export const useAppContext = () => {
 
 export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [assets, setAssets] = useState([]);
   const [users, setUsers] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,6 +36,9 @@ export const AppProvider = ({ children }) => {
           console.error("Auth initialization failed:", error);
           localStorage.removeItem("assettrack_token");
           localStorage.removeItem("assettrack_user");
+        }
+        finally{
+          setLoading(false)
         }
       }
       setLoading(false);
@@ -62,10 +69,15 @@ export const AppProvider = ({ children }) => {
   };
 
   // Register function
-  const register = async (name, email,username,password) => {
+  const register = async (name, email, username, password) => {
     try {
       setError(null);
-      const response = await authAPI.register({ name,email,username, password });
+      const response = await authAPI.register({
+        name,
+        email,
+        username,
+        password,
+      });
       const { token, user: userData } = response.data;
 
       localStorage.setItem("assettrack_token", token);
@@ -99,9 +111,10 @@ export const AppProvider = ({ children }) => {
   // Fetch all assets
   const fetchAssets = async (filters = {}) => {
     try {
+      console.log("Fetching assets with filters:", filters);
       setError(null);
       const response = await assetsAPI.getAll(filters);
-      setAssets(response.data.assets);
+      
       return { success: true, data: response.data.assets };
     } catch (error) {
       const errorMessage =
@@ -114,9 +127,10 @@ export const AppProvider = ({ children }) => {
   // Add new asset
   const addAsset = async (assetData) => {
     try {
+      console.log("Adding asset with data:", assetData);
       setError(null);
       const response = await assetsAPI.create(assetData);
-      setAssets((prev) => [...prev, response.data.asset]);
+  
       return { success: true, data: response.data.asset };
     } catch (error) {
       const errorMessage =
@@ -131,11 +145,7 @@ export const AppProvider = ({ children }) => {
     try {
       setError(null);
       const response = await assetsAPI.update(assetId, updatedData);
-      setAssets((prev) =>
-        prev.map((asset) =>
-          asset._id === assetId ? response.data.asset : asset
-        )
-      );
+
       return { success: true, data: response.data.asset };
     } catch (error) {
       const errorMessage =
@@ -150,7 +160,6 @@ export const AppProvider = ({ children }) => {
     try {
       setError(null);
       await assetsAPI.delete(assetId);
-      setAssets((prev) => prev.filter((asset) => asset._id !== assetId));
       return { success: true };
     } catch (error) {
       const errorMessage =
@@ -182,6 +191,114 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Failed to fetch asset types";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const getAllManufacturers = async () => {
+    try {
+      setError(null);
+      const response = await manufacturersAPI.getAllManufacturers();
+      return { success: true, data: response.data.manufacturers };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to fetch manufacturers";
+      setError(errorMessage);
+      console.error(error);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const addNewManufacturer = async (manufacturerData) => {
+    try {
+      setError(null);
+      const response = await assetsAPI.addNewManufacturer(manufacturerData);
+      return { success: true, data: response.data.manufacturer };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to add manufacturer";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const updateManufacturer = async (manufacturerId, updatedData) => {
+    try {
+      setError(null);
+      const response = await assetsAPI.updateManufacturer(
+        manufacturerId,
+        updatedData
+      );
+      return { success: true, data: response.data.manufacturer };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to update manufacturer";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const deleteManufacturer = async (manufacturerId) => {
+    try {
+      setError(null);
+      await assetsAPI.deleteManufacturer(manufacturerId);
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete manufacturer";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const getAssetModels = async () => {
+    try {
+      setError(null);
+      const response = await assetsAPI.getAllAssetModels();
+      return { success: true, data: response.data.models };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to fetch asset models";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const addAssetModel = async (modelData) => {
+    try {
+      setError(null);
+      const response = await assetsAPI.addAssetModel(modelData);
+      return { success: true, data: response.data.model };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to add asset model";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const updateAssetModel = async (modelId, updatedData) => {
+    try {
+      setError(null);
+      const response = await assetsAPI.updateAssetModel(modelId, updatedData);
+      return { success: true, data: response.data.model };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to update asset model";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const deleteAssetModel = async (modelId) => {
+    try {
+      setError(null);
+      await assetsAPI.deleteAssetModel(modelId);
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete asset model";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -265,7 +382,6 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     user,
-    assets,
     users,
     isAuthenticated,
     loading,
@@ -279,7 +395,15 @@ export const AppProvider = ({ children }) => {
     deleteAsset,
     getAssetTypes,
     getAssetById,
+    getAssetModels,
+    addAssetModel,
+    updateAssetModel,
+    deleteAssetModel,
     updateAssetStatus,
+    getAllManufacturers,
+    addNewManufacturer,
+    updateManufacturer,
+    deleteManufacturer,
     getAssetStats,
     getRecentActivity,
     fetchUsers,
