@@ -77,7 +77,24 @@ export const assetsAPI = {
 
 export const manufacturersAPI = {
   getAllManufacturers: () => api.get("/manufacturers"),
-  addNew: (manufacturerData) => api.post("/manufacturers", manufacturerData),
+  addNewManufacturer: (manufacturerData) => {
+    // If caller passed a FormData (file upload), remove the default JSON content-type so
+    // the browser/axios sets proper multipart/form-data with boundary.
+    if (manufacturerData instanceof FormData) {
+      return api.post("/manufacturers", manufacturerData, {
+        headers: { "Content-Type": undefined }, // let browser set multipart boundary
+        // optional: prevent axios from transforming FormData
+        transformRequest: (data, headers) => {
+          // axios may re-add default headers; ensure Content-Type is removed
+          if (headers && headers["Content-Type"] === undefined) {
+            delete headers["Content-Type"];
+          }
+          return data;
+        },
+      });
+    }
+    return api.post("/manufacturers", manufacturerData);
+  },
   update: (manufacturerData) => api.put("/manufacturers", manufacturerData),
   delete: (manufacturerId) =>
     api.delete("/assets/manufacturers", { data: { id: manufacturerId } }),

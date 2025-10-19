@@ -212,10 +212,13 @@ export const AppProvider = ({ children }) => {
 
   const addNewManufacturer = async (manufacturerData) => {
     try {
+      console.log("Adding manufacturer with data:", manufacturerData);
+      console.log("Logo file", manufacturerData.get("logoImage"));
       setError(null);
-      const response = await assetsAPI.addNewManufacturer(manufacturerData);
+      const response = await manufacturersAPI.addNewManufacturer(manufacturerData);
       return { success: true, data: response.data.manufacturer };
     } catch (error) {
+      console.log("Error adding manufacturer:", error);
       const errorMessage =
         error.response?.data?.message || "Failed to add manufacturer";
       setError(errorMessage);

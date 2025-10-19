@@ -1,4 +1,8 @@
 import React from "react";
+import Categories from "../components/settingsPage/Categories";
+import Manufacturers from "../components/settingsPage/Manufacturers";
+import AssetModels from "../components/settingsPage/AssetModels";
+import Users from "../components/settingsPage/Users";
 
 const SettingsPage = () => {
   return (
@@ -15,37 +19,25 @@ const SettingsPage = () => {
           <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-y-6">
             {/* Manufactureres */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/50 p-8 text-white">
-              <h2 className="text-xl font-semibold mb-4">Manufacturers</h2>
-              <p className="text-slate-400">
-                Here you can add vendors and manufacturers.
-              </p>
+              <Manufacturers/>
               {/* Add settings form or options here */}
             </div>
 
             {/* Asset Categories */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/50 p-8 text-white">
-              <h2 className="text-xl font-semibold mb-4">Categories</h2>
-              <p className="text-slate-400">
-                Here you can add asset categories.
-              </p>
+              <Categories/>
               {/* Add settings form or options here */}
             </div>
 
             {/* Asset Models */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/50 p-8 text-white">
-              <h2 className="text-xl font-semibold mb-4">Asset Models</h2>
-              <p className="text-slate-400">
-                Here you can add asset models.
-              </p>
+             <AssetModels/>
               {/* Add settings form or options here */}
             </div>
 
              {/* Users */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/50 p-8 text-white">
-              <h2 className="text-xl font-semibold mb-4">Users</h2>
-              <p className="text-slate-400">
-                Here you can add users.
-              </p>
+             <Users/>
               {/* Add settings form or options here */}
             </div>
 

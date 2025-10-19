@@ -1,0 +1,37 @@
+
+/api/auth/register
+/api/auth/login
+/api/auth/logout
+/api/auth/me
+/api/auth/forgot-password
+/api/auth/reset-password
+
+GET /api/assets		//get all assets
+POSt /api/assets	//add new asset
+
+GET /api/assets/:id //get one asset details
+PUT /api/assets/:id //update one asset
+DELETE /api/assets/:id  //delete one asset
+
+GET /api/assets/assetTypes //get all assetTypes
+POST /api/assets/assetTypes //add new assetType
+DELETE /api/assets/assetTypes  //delete many assetTypes
+
+GET /api/assets/assetTypes/:id   //get one assetTypes
+PUT /api/assets/assetTypes/:id   //update one assetTypes
+DELETE /api/assets/assetTypes/:id  //delete one assetTypes
+
+GET /api/manufacturers		//get all manufacturers
+POST /api/manufacturers		//add a new manufacturer
+
+GET /api/assets/manufacturers/:id		//get one manufacturer details 
+PUT /api/assets/manufacturers/:id		//update one manufacturer
+DELETE /api/assets/manufacturers/:id		//delete one manufacturer
+
+
+
+/api/users
+
+
+
+/api/reports

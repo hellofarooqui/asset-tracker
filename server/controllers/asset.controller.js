@@ -23,20 +23,17 @@ exports.getAllAssets = async (req, res) => {
 
     const assets = await Asset.find(query)
       .populate({
-        path:'model',
+        path: "model",
         populate: {
-          path: 'name manufacturer assetCategory modelnumber',
-          select: 'name'
-        } 
-        
+          path: "name manufacturer assetCategory modelnumber",
+          select: "name",
+        },
       })
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
 
     const count = await Asset.countDocuments(query);
-
-
 
     res.status(200).json({
       success: true,
@@ -74,7 +71,7 @@ exports.createAsset = async (req, res) => {
     console.log("Creating asset with data:", req.body);
     const asset = await Asset.create(req.body);
 
-    if(!asset){
+    if (!asset) {
       return res.status(400).json({ message: "Asset creation failed" });
     }
 
@@ -368,6 +365,8 @@ exports.deleteAssetCatgory = async (req, res) => {
 
 exports.addNewManufacturer = async (req, res) => {
   try {
+    console.log("Adding new manufacturer with data:", req.body);
+
     const { name, description } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Manufacturer name is required" });
@@ -382,7 +381,17 @@ exports.addNewManufacturer = async (req, res) => {
     // Since manufacturer is just a string field in Asset, no separate model is created.
     // We can just acknowledge the addition.
 
-    const addedManufacturer = await Manufacturer.create(req.body);
+    let manufacturerData = { ...req.body };
+
+    const filename = req.file && req.file.filename;
+    const logoImage = filename
+      ? `/uploads/ManufacturerLogos/${filename}`
+      : null;
+
+    const addedManufacturer = await Manufacturer.create({
+      ...manufacturerData,
+      logoImage,
+    });
 
     if (addedManufacturer) {
       res.status(201).json({
@@ -392,6 +401,7 @@ exports.addNewManufacturer = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log("Error", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -473,7 +483,6 @@ exports.deleteManufacturer = async (req, res) => {
   }
 };
 
-
 exports.getAllAssetModels = async (req, res) => {
   try {
     const models = await AssetModel.find();
@@ -487,36 +496,31 @@ exports.getAllAssetModels = async (req, res) => {
 };
 
 exports.addAssetModel = async (req, res) => {
-  try{
+  try {
     const added = await AssetModel.create(req.body);
 
-    if(added){
+    if (added) {
       res.status(201).json({
         success: true,
         message: "Asset model added successfully",
         model: added,
       });
     }
-  }
-  catch (error) {
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 exports.updateAssetModel = async (req, res) => {
-  try{
-
-  }
-  catch (error) {
+  try {
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 exports.deleteAssetModel = async (req, res) => {
-  try{
-
-  }
-  catch (error) {
+  try {
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};

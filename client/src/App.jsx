@@ -11,6 +11,7 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import Dashboard from "./pages/Dashboard";
 import Register from "./pages/Register";
+import NewManufacturer from "./pages/NewManufacturer";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="settings/newManufacturer" element={<NewManufacturer />} />
             </Route>
 
             {/* Catch all */}

@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require('path');
 
 const AuthRouter = require("./routes/auth.routes");
 const AssetRouter = require("./routes/assets.routes");
@@ -32,6 +33,8 @@ app.use("/api/assets", AssetRouter );
 app.use("/api/users", UserRouter);
 app.use("/api/reports", ReportsRouter);
 app.use('/api/manufacturers', ManufacturerRouter)
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
